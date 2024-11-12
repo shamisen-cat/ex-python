@@ -3,7 +3,7 @@ Pythonのインストールに関する備忘録
 
 ## 概要
 - Python実行時のTkinterのエラーの解消
-- Pythonインストール時のIzmaに関する警告の解消
+- Pythonインストール時のlzmaに関する警告の解消
 
 ## 発生環境
 - Mac mini M2
@@ -42,7 +42,7 @@ Python実行時のTkinterのエラーの解消
 ```
 
 ### xzをインストールする。
-Pythonインストール時のIzmaに関する警告の解消
+Pythonインストール時のlzmaに関する警告の解消
 ```
 % brew install xz
 ```

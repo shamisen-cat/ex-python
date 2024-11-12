@@ -1,3 +1,5 @@
+# version 1.0.0
+
 [tool.mypy]
 ignore_missing_imports = true
 
@@ -16,32 +18,20 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    # Common
+    # Annotation
     "ANN002",  # Missing type annotation for `*args`
     "ANN003",  # Missing type annotation for `**kwargs`
+    # Comment
+    "ERA001",  # Found commented-out code
     "FIX002",  # Line contains TODO, consider resolving the issue
     "TD002",   # Missing author in TODO
     "TD003",   # Missing issue link on the line following this TODO
-    # Development
-    "ERA001",  # Found commented-out code
+    # Others
     "T201",    # `print` found
-    # docstring
-    "D100",    # Missing docstring in public module
-    "D101",    # Missing docstring in public class
-    "D102",    # Missing docstring in public method
-    "D103",    # Missing docstring in public function
-    "D104",    # Missing docstring in public package
-    "D107",    # Missing docstring in `__init__`
-    "D212",    # Multi-line docstring summary should start at the first line
-    "D400",    # First line should end with a period
-    "D415",    # First line should end with a period, question mark, or exclamation point
-    # Consider deleting
-    "ANN201",  # Missing return type annotation for public function
-    "ANN202",  # Missing return type annotation for private function
 ]
 fixable = ["ALL"]
 unfixable = [
-    "F401",  # imported but unused
+    "F401",    # imported but unused
 ]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 

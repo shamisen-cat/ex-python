@@ -4,12 +4,18 @@ Attributes
 ----------
 Card
     Define the suit and rank of cards.
+Deck : ABC
+    Base class for storing cards.
+CardStack : Cards
+    Class that implements stack for storing cards.
 
 """
 
 import itertools
 import random
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 
 SUIT_NAMES: dict[int, str] = {
     1: 'club',
@@ -39,9 +45,9 @@ class Card:
     Attributes
     ----------
     suit : int, default JOKER_SUIT
-        Suit values range from 1 to 5.
+        Suit range from 1 to 5
     rank : int, default JOKER_RANK
-        Rank values range from 2 to 15.
+        Rank range from 2 to 15
 
     """
 
@@ -49,20 +55,21 @@ class Card:
     rank: int = JOKER_RANK
 
     def __post_init__(self) -> None:
-        """Validate the values of suit and rank."""
+        """Validate the values of the suit and rank.
+
+        Raises
+        ------
+        ValueError
+            If the values of the suit and rank are out of range, raise it.
+
+        """
         min_suit = min(SUIT_NAMES.keys())
         min_rank = min(RANK_CHARS.keys())
         if not min_suit <= self.suit <= JOKER_SUIT:
-            msg = (
-                f'Suit values range from {min_suit} to {JOKER_SUIT}:',
-                self.suit,
-            )
+            msg = f'Suit range from {min_suit} to {JOKER_SUIT}: {self.suit}'
             raise ValueError(msg)
         if not min_rank <= self.rank <= JOKER_RANK:
-            msg = (
-                f'Rank values range from {min_rank} to {JOKER_RANK}:',
-                self.rank,
-            )
+            msg = f'Rank range from {min_rank} to {JOKER_RANK}: {self.rank}'
             raise ValueError(msg)
 
     @property
@@ -96,7 +103,7 @@ class Card:
         return RANK_CHARS.get(self.rank, '')
 
     def __eq__(self, other: object) -> bool:
-        """If the ranks are equal, return true.
+        """If the ranks are equal, return 'True'.
 
         Raises
         ------
@@ -105,7 +112,7 @@ class Card:
 
         """
         if not isinstance(other, Card):
-            msg = "The argument is not a 'Card' class."
+            msg = "Argument is not 'Card' class."
             raise TypeError(msg)
         return self.rank == other.rank
 
@@ -121,7 +128,7 @@ class Card:
 
         """
         if not isinstance(other, Card):
-            msg = "The argument is not a 'Card' class."
+            msg = "Argument is not 'Card' class."
             raise TypeError(msg)
         return (
             self.suit < other.suit if self == other else self.rank < other.rank
@@ -139,7 +146,7 @@ class Card:
 
         """
         if not isinstance(other, Card):
-            msg = "The argument is not a 'Card' class."
+            msg = "Argument is not 'Card' class."
             raise TypeError(msg)
         return (
             self.suit > other.suit if self == other else self.rank > other.rank
@@ -148,7 +155,7 @@ class Card:
     def __str__(self) -> str:
         """Return the suit name initial and rank char.
 
-        If the rank is an empty string, the card is a joker. Then return 'JK'.
+        If the rank is an empty string, the card is joker. Then return 'JK'.
 
         Returns
         -------
@@ -159,82 +166,99 @@ class Card:
         return self.suit_name[0] + self.rank_char if self.rank_char else 'JK'
 
 
-# TODO: Define an abstract class named 'CardHolder'.
-class CardDeck:
-    """カードを生成し、カードの保持と取り出しを行う。
+class Deck(ABC):
+    """Base class for storing cards."""
+
+    @abstractmethod
+    def push_card(self, card: Card) -> None:
+        """Add a card to instance variables."""
+
+
+class CardStack(Deck):
+    """Class that implements stack for storing cards.
 
     Attributes
     ----------
-    __cards : list[Card]
-        カードデッキ
+    __card_stack : list[Card]
+        Card stack
 
     """
 
-    def __init__(self, *, joker_includes: bool = True) -> None:
-        """カードを生成する。
+    def __init__(self) -> None:  # noqa: D107
+        self.__card_stack: list[Card] = []
 
-        Parameters
-        ----------
-        joker_includes : bool
-            True: Jokerを生成する, False: Jokerを生成しない, by default True
+    def push_card(self, card: Card) -> None:
+        """Add a card to the card stack.
+
+        Raises
+        ------
+        TypeError
+            If the argument is not a 'Card' class, raise it.
 
         """
-        suit_iter: range = range(
-            min(SUIT_NAMES.keys()), max(SUIT_NAMES.keys()) + 1
+        if not isinstance(card, Card):
+            msg = "Argument is not 'Card' class."
+            raise TypeError(msg)
+        self.__card_stack.append(card)
+
+    def pop_card(self) -> Card | None:
+        """Pop the last card in the card stack.
+
+        If the card stack is empty, return 'None'.
+
+        Returns
+        -------
+        Card | None
+            Last card in the card stack
+
+        """
+        return self.__card_stack.pop() if self.__card_stack else None
+
+    def __str__(self) -> str:  # noqa: D105
+        return ','.join(map(str, self.__card_stack))
+
+
+class JokerSet(Enum):  # noqa: D101
+    includes: int = 1
+    excludes: int = 2
+
+
+def set_shuffled_cards(
+    deck: Deck, joker_set: JokerSet = JokerSet.includes
+) -> None:
+    """Set shuffled cards into the card deck.
+
+    Parameters
+    ----------
+    deck : Deck
+        Base class for storing cards.
+    joker_set : JokerSet, default JokerSet.includes
+        Include or exclude the joker set.
+
+    """
+    min_suit = min(SUIT_NAMES.keys())
+    max_suit = max(SUIT_NAMES.keys())
+    min_rank = min(RANK_CHARS.keys())
+    max_rank = max(RANK_CHARS.keys())
+    cards = [
+        Card(suit, rank)
+        for suit, rank in itertools.product(
+            range(min_suit, max_suit + 1), range(min_rank, max_rank + 1)
         )
-        rank_iter: range = range(
-            min(RANK_CHARS.keys()), max(RANK_CHARS.keys()) + 1
-        )
-        cards: list[Card] = [
-            Card(suit, rank)
-            for suit, rank in itertools.product(suit_iter, rank_iter)
-        ]
-        if joker_includes:
-            cards.append(Card())
-        random.shuffle(cards)
-
-        self.__cards: list[Card] = cards
-
-    def __str__(self) -> str:
-        """カードをカンマで結合する。"""
-        return ','.join(map(str, self.__cards))
-
-    def card_exists(self) -> bool:
-        """カードの有無を判定する。"""
-        return self.__cards != []
-
-    def pop_card(self) -> Card:
-        """カードデッキからカードを取り出す。"""
-        return self.__cards.pop()
+    ]
+    if joker_set == JokerSet.includes:
+        cards.append(Card())
+    random.shuffle(cards)
+    for card in cards:
+        deck.push_card(card)
 
 
 if __name__ == '__main__':
-    print('Generating a new card deck.')
-    card_deck: CardDeck = CardDeck()
-    print(card_deck)
-    print('(in card deck)')
-
-    print('Take out the 1st card.')
-    card_1: Card = card_deck.pop_card()
-    print(card_deck)
-    print('(in card deck)')
-
-    print('Take out the 2nd card and compare two cards.')
-    card_2: Card = card_deck.pop_card()
-    print(card_1, '(1st card)')
-    print(card_2, '(2nd card)')
-    print(card_1, '=', card_2, '->', card_1 == card_2)
-    print(card_1, '<', card_2, '->', card_1 < card_2)
-    print(card_1, '>', card_2, '->', card_1 > card_2)
-
-    print('Take out the last card.')
-    while card_deck.card_exists():
-        card_deck.pop_card()
-    print(card_deck)
-    print('(in card deck)')
-
-    print('Generating a new card deck without Joker.')
-    card_deck = CardDeck(joker_includes=False)
-    print(card_deck)
-    print('(in card deck)')
-    print('in Joker ->', 'JK' in str(card_deck))
+    card_stack = CardStack()
+    set_shuffled_cards(card_stack)
+    cnt = 0
+    card = card_stack.pop_card()
+    while card:
+        cnt += 1
+        card = card_stack.pop_card()
+    print(cnt)
